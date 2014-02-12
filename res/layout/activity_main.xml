@@ -1,0 +1,46 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    tools:ignore="MergeRootFrame" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Select an Image to Paint on"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <ImageButton
+            android:id="@+id/imageButton3"
+            android:layout_width="138dp"
+            android:layout_height="118dp"
+            android:layout_gravity="center"
+            android:src="@drawable/hawk" />
+
+        <ImageButton
+            android:id="@+id/imageButton2"
+            android:layout_width="135dp"
+            android:layout_height="119dp"
+            android:layout_gravity="center"
+            android:src="@drawable/fight" />
+
+        <ImageButton
+            android:id="@+id/imageButton1"
+            android:layout_width="136dp"
+            android:layout_height="119dp"
+            android:layout_gravity="center"
+            android:src="@drawable/tongue" />
+
+    </LinearLayout>
+
+</FrameLayout>
+
