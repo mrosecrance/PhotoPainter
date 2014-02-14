@@ -34,20 +34,22 @@ public class PaintActivity extends Activity {
     private MaskFilter  mBlur;
     Bitmap  shadowBitmap;
     Canvas  mCanvas;
-    Canvas canvas;
+    Canvas shadowCanvas;
     Path    mPath;
     Paint   shadowBitmapPaint;
+    Paint paint;
     ImageView image;
     Bitmap color;
     Bitmap grey;
     Bitmap user;
-    
+    boolean eraseb=false;
     
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(new MyView(this));
 
         mPaint = new Paint();
+        paint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
         mPaint.setColor(0x00000000);
@@ -62,16 +64,35 @@ public class PaintActivity extends Activity {
         mBlur = new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL);
         Intent i = getIntent();
 		String picture = i.getStringExtra("picture");
-		image = (ImageView) findViewById(R.id.image);
+		//image = (ImageView) findViewById(R.id.image);
 		color = BitmapFactory.decodeResource(getResources(), getResources().getIdentifier(picture , "drawable", getPackageName()));
-		//createBitmaps(color);
-	    canvas = new Canvas(color.copy(Bitmap.Config.ARGB_8888, true));
-		//canvas= new Canvas();
+		createBitmaps(color);
+	    //mCanvas = new Canvas(user.copy(Bitmap.Config.ARGB_8888, true));
+	    //mCanvas.drawBitmap(color, 0, 0, null);
+		mCanvas= new Canvas(shadowBitmap);
     }
+    public void createBitmaps(Bitmap bmp)
+	{        
+	    int width, height;
+	    user=color;
+	    user = user.copy(user.getConfig() , true);
+	    height = bmp.getHeight();
+	    width = bmp.getWidth();    
+	    //shadow = Bitmap.createBitmap(width, height,Bitmap.Config.ARGB_8888);
+	    shadowBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        shadowCanvas = new Canvas(shadowBitmap);
+	    Bitmap grayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+	    Canvas c = new Canvas(grayscale);
+	    Paint paint = new Paint();
+	    ColorMatrix cm = new ColorMatrix();
+	    cm.setSaturation(0);
+	    ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+	    paint.setColorFilter(f);
+	    c.drawBitmap(bmp, 0, 0, paint);
+	    grey = grayscale;
+	    
+	}
 
-    public void colorChanged(int color) {
-        mPaint.setColor(color);
-    }
 
     public class MyView extends View {
 
@@ -90,17 +111,40 @@ public class PaintActivity extends Activity {
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
             super.onSizeChanged(w, h, oldw, oldh);
-            shadowBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            mCanvas = new Canvas(shadowBitmap);
+            //shadowBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            //mCanvas = new Canvas(shadowBitmap);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             canvas.drawColor(0xFFAAAAAA);
 
-            canvas.drawBitmap(shadowBitmap, 0, 0, shadowBitmapPaint);
-
-            canvas.drawPath(mPath, mPaint);
+            //canvas.drawBitmap(shadowBitmap, 0, 0, shadowBitmapPaint);
+            
+            shadowCanvas.drawBitmap(shadowBitmap, 0, 0, shadowBitmapPaint);
+            shadowCanvas.drawPath(mPath, mPaint);
+            //int[] pixels = null;
+			//shadowBitmap.getPixels(pixels, 0, 0, 0, 0, shadowBitmap.getWidth(), shadowBitmap.getHeight());
+			for(int x=0; x<shadowBitmap.getWidth(); x++){
+				for(int y=0; y<shadowBitmap.getHeight(); y++){
+					int pixel = shadowBitmap.getPixel(x,y);
+					if(pixel == Color.BLACK){
+						//int c =grey.getPixel(x,y);
+						//user.setPixel(x,y,grey.getPixel(x,y));
+						
+						user.setPixel(x,y,grey.getPixel(x,y));
+					}
+					else if (eraseb){
+						user.setPixel(x,y,color.getPixel(x,y));
+					}
+				}
+			}
+			
+			//canvas.drawPath(mPath, mPaint);
+            //shadowCanvas.drawBitmap(color, 0, 0, paint);
+			canvas.drawBitmap(user, 0, 0, shadowBitmapPaint);
+            //canvas.drawBitmap(user, 0, 0, shadowBitmapPaint); //is images that's rendered
+            
         }
 
         private float mX, mY;
@@ -124,7 +168,8 @@ public class PaintActivity extends Activity {
         private void touch_up() {
             mPath.lineTo(mX, mY);
             // commit the path to our offscreen
-            mCanvas.drawPath(mPath, mPaint);
+            //mCanvas.drawPath(mPath, mPaint);
+            shadowCanvas.drawPath(mPath, mPaint);
             // kill this so we don't double draw
             mPath.reset();
         }
@@ -156,16 +201,16 @@ public class PaintActivity extends Activity {
     private static final int EMBOSS_MENU_ID = Menu.FIRST + 1;
     private static final int BLUR_MENU_ID = Menu.FIRST + 2;
     private static final int ERASE_MENU_ID = Menu.FIRST + 3;
-    private static final int SRCATOP_MENU_ID = Menu.FIRST + 4;
+   // private static final int SRCATOP_MENU_ID = Menu.FIRST + 4;
 
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        menu.add(0, COLOR_MENU_ID, 0, "Color").setShortcut('3', 'c');
+        menu.add(0, COLOR_MENU_ID, 0, "Color or Grayscale").setShortcut('3', 'c');
         menu.add(0, EMBOSS_MENU_ID, 0, "Emboss").setShortcut('4', 's');
         menu.add(0, BLUR_MENU_ID, 0, "Blur").setShortcut('5', 'z');
         menu.add(0, ERASE_MENU_ID, 0, "Erase").setShortcut('5', 'z');
-        menu.add(0, SRCATOP_MENU_ID, 0, "SrcATop").setShortcut('5', 'z');
+        //menu.add(0, SRCATOP_MENU_ID, 0, "SrcATop").setShortcut('5', 'z');
 
         /****   Is this the mechanism to extend with filter effects?
         Intent intent = new Intent(null, getIntent().getData());
@@ -206,13 +251,16 @@ public class PaintActivity extends Activity {
                 }
                 return true;
             case ERASE_MENU_ID:
+            	eraseb=true;
                 mPaint.setXfermode(new PorterDuffXfermode(
                                                         PorterDuff.Mode.CLEAR));
                 return true;
-            case SRCATOP_MENU_ID:
-                mPaint.setXfermode(new PorterDuffXfermode(
-                                                    PorterDuff.Mode.SRC_ATOP));
-                mPaint.setAlpha(0x80);
+            case COLOR_MENU_ID:
+                //mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+                //mPaint.setAlpha(0x80);
+            	 //mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+            	mPaint.setColor(0x00000000);       
+            	eraseb=false;
                 return true;
         }
         return super.onOptionsItemSelected(item);
